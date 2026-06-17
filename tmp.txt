@@ -2,7 +2,6 @@ package com.bruce.controller.cli
 
 import com.bruce.controller.ble.BruceBleManager
 import kotlinx.coroutines.*
-import com.bruce.controller.utils.JsonExtractor
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -72,7 +71,35 @@ class BruceCliHandler(private val bleManager: BruceBleManager) {
     /** Ищем СБАЛАНСИРОВАННЫЕ JSON-объекты в буфере и парсим каждый. */
     private fun tryExtractJson() {
         while (true) {
-            val json = JsonExtractor.extractNextJson(rawBuffer) ?: return
+            val text = rawBuffer.toString()
+            val start = text.indexOf('{')
+            if (start < 0) {
+                // мусор без JSON — иногда можно почистить, если много накопилось
+                if (rawBuffer.length > 4000) {
+                    rawBuffer.clear()
+                }
+                return
+            }
+            var depth = 0
+            var inString = false
+            var escape = false
+            var foundEnd = -1
+            for (i in start until text.length) {
+                val c = text[i]
+                if (escape) { escape = false; continue }
+                when {
+                    c == '\\' && inString -> escape = true
+                    c == '"' -> inString = !inString
+                    !inString && c == '{' -> depth++
+                    !inString && c == '}' -> {
+                        depth--
+                        if (depth == 0) { foundEnd = i; break }
+                    }
+                }
+            }
+            if (foundEnd < 0) return // JSON ещё не дочитан до конца — ждём
+            val json = text.substring(start, foundEnd + 1)
+            rawBuffer.delete(0, foundEnd + 1)
             runCatching { parseMenuJson(json) }.onSuccess { snap ->
                 if (snap != null) {
                     _menuSnapshot.value = snap

@@ -17,6 +17,10 @@ import org.json.JSONObject
  */
 class BruceCliHandler(private val bleManager: BruceBleManager) {
 
+    companion object {
+        const val MAX_TERMINAL_LINES = 500
+    }
+
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private var responseCollector: Job? = null
 

@@ -12,7 +12,7 @@ package com.bruce.controller.data.model
  */
 object BruceFeatures {
 
-    fun getAllFeatures(): List<BruceFeature> = listOf(
+    val allFeatures: List<BruceFeature> = listOf(
 
         // ── WiFi ──
         BruceFeature(
@@ -213,8 +213,8 @@ object BruceFeatures {
     )
 
     fun getByCategory(category: BruceCategory): List<BruceFeature> =
-        getAllFeatures().filter { it.category == category }
+        allFeatures.filter { it.category == category }
 
     fun getFeatureById(id: String): BruceFeature? =
-        getAllFeatures().flatMap { listOf(it) + it.subFeatures }.find { f -> f.id == id }
+        allFeatures.flatMap { listOf(it) + it.subFeatures }.find { f -> f.id == id }
 }

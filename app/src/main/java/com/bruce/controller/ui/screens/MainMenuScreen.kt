@@ -45,7 +45,7 @@ fun MainMenuScreen(
     onCategoryClick: (BruceCategory) -> Unit,
     onDisconnect: () -> Unit
 ) {
-    val features = remember { BruceFeatures.getAllFeatures() }
+    val features = remember { BruceFeatures.allFeatures }
 
     Column(
         modifier = Modifier

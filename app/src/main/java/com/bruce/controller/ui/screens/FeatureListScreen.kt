@@ -25,6 +25,9 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.bruce.controller.cli.BruceCliHandler
@@ -67,6 +70,7 @@ fun FeatureListScreen(
         loading = false
     }
 
+    val haptic = LocalHapticFeedback.current
     val accent = categoryColor(category)
 
     Column(
@@ -132,7 +136,7 @@ fun FeatureListScreen(
         when {
             loading && snapshot == null -> LoadingState(accent)
             snapshot == null -> EmptyState(
-                msg = "Стик не ответил.\nПроверь, что BLE API включён:\nConfig → Toggle BLE API",
+                msg = androidx.compose.ui.platform.LocalContext.current.getString(com.bruce.controller.R.string.stick_did_not_respond),
                 accent = accent,
                 onRetry = {
                     scope.launch {
@@ -146,7 +150,7 @@ fun FeatureListScreen(
                 }
             )
             snapshot!!.options.isEmpty() -> EmptyState(
-                msg = "В этом меню нет опций.\nПопробуй обновить или выйти.",
+                msg = androidx.compose.ui.platform.LocalContext.current.getString(com.bruce.controller.R.string.no_options_in_menu),
                 accent = accent,
                 onRetry = {
                     scope.launch { cliHandler.refreshOptions() }
@@ -165,6 +169,7 @@ fun FeatureListScreen(
                             active = opt.n == snap.active,
                             accent = accent,
                             onClick = {
+                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                                 scope.launch {
                                     cliHandler.optionsRun(opt.n)
                                     delay(700) // стик может переключить меню
@@ -243,10 +248,11 @@ private fun OptionRow(opt: MenuOption, active: Boolean, accent: Color, onClick: 
 
 @Composable
 private fun LoadingState(accent: Color) {
+    val context = androidx.compose.ui.platform.LocalContext.current
     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text(
-                "Loading menu…",
+                context.getString(com.bruce.controller.R.string.loading_menu),
                 color = accent,
                 fontFamily = FontFamily.Monospace,
                 fontSize = 13.sp,
@@ -254,7 +260,7 @@ private fun LoadingState(accent: Color) {
             )
             Spacer(Modifier.height(8.dp))
             Text(
-                "loader open → optionsJSON",
+                context.getString(com.bruce.controller.R.string.loader_open),
                 color = BruceColors.TextDim,
                 fontFamily = FontFamily.Monospace,
                 fontSize = 10.sp
@@ -265,6 +271,7 @@ private fun LoadingState(accent: Color) {
 
 @Composable
 private fun EmptyState(msg: String, accent: Color, onRetry: () -> Unit) {
+    val context = androidx.compose.ui.platform.LocalContext.current
     Box(Modifier.fillMaxSize().padding(24.dp), contentAlignment = Alignment.Center) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text(
@@ -286,7 +293,7 @@ private fun EmptyState(msg: String, accent: Color, onRetry: () -> Unit) {
                 Icon(Icons.Filled.Refresh, null, tint = BruceColors.Background, modifier = Modifier.size(14.dp))
                 Spacer(Modifier.width(8.dp))
                 Text(
-                    "RETRY",
+                    context.getString(com.bruce.controller.R.string.retry),
                     color = BruceColors.Background,
                     fontFamily = FontFamily.Monospace,
                     fontSize = 12.sp,
@@ -299,6 +306,7 @@ private fun EmptyState(msg: String, accent: Color, onRetry: () -> Unit) {
 
 @Composable
 private fun HomeButton(accent: Color, onClick: () -> Unit) {
+    val context = androidx.compose.ui.platform.LocalContext.current
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -313,7 +321,7 @@ private fun HomeButton(accent: Color, onClick: () -> Unit) {
         Icon(Icons.Filled.Home, null, tint = accent, modifier = Modifier.size(16.dp))
         Spacer(Modifier.width(10.dp))
         Text(
-            "↩ MAIN MENU",
+            "↩ ${context.getString(com.bruce.controller.R.string.main_menu)}",
             color = accent,
             fontFamily = FontFamily.Monospace,
             fontSize = 12.sp,

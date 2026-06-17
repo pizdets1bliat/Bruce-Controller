@@ -17,6 +17,7 @@ import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.PowerSettingsNew
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
@@ -54,6 +55,11 @@ fun TerminalScreen(
     LaunchedEffect(log.size) {
         if (log.isNotEmpty()) listState.animateScrollToItem(log.size - 1)
     }
+
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val historyManager = remember { com.bruce.controller.data.TerminalHistoryManager(context) }
+    val history by historyManager.history.collectAsStateWithLifecycle(initialValue = emptyList())
+    var historyIndex by remember { mutableStateOf(-1) }
 
     Scaffold(
         topBar = {
@@ -102,6 +108,7 @@ fun TerminalScreen(
             }
 
             // Лог
+            val context = androidx.compose.ui.platform.LocalContext.current
             LazyColumn(
                 state = listState,
                 modifier = Modifier
@@ -114,7 +121,7 @@ fun TerminalScreen(
                 if (log.isEmpty()) {
                     item {
                         Text(
-                            "// Terminal ready. Type a command below or use the D-pad.",
+                            context.getString(com.bruce.controller.R.string.terminal_ready),
                             color = BruceColors.TextDim,
                             fontFamily = FontFamily.Monospace,
                             fontSize = 11.sp,
@@ -175,10 +182,30 @@ fun TerminalScreen(
                 Spacer(Modifier.width(8.dp))
                 IconButton(
                     onClick = {
+                        if (history.isNotEmpty() && historyIndex < history.size - 1) {
+                            historyIndex++
+                            input = history[history.size - 1 - historyIndex]
+                        }
+                    },
+                    modifier = Modifier.size(36.dp)
+                ) {
+                    Icon(
+                        Icons.Filled.ArrowUpward,
+                        "History Up",
+                        tint = BruceColors.Primary,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+                IconButton(
+                    onClick = {
                         if (input.isNotBlank()) {
                             val cmd = input
                             input = ""
-                            scope.launch { cliHandler.execute(cmd) }
+                            historyIndex = -1
+                            scope.launch {
+                                historyManager.addCommand(cmd)
+                                cliHandler.execute(cmd)
+                            }
                         }
                     },
                     modifier = Modifier.size(36.dp)

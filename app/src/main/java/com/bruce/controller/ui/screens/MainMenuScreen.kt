@@ -21,6 +21,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -46,6 +48,7 @@ fun MainMenuScreen(
     onDisconnect: () -> Unit
 ) {
     val features = remember { BruceFeatures.getAllFeatures() }
+    val haptic = LocalHapticFeedback.current
 
     Column(
         modifier = Modifier
@@ -55,6 +58,7 @@ fun MainMenuScreen(
         StatusBar(bleManager = bleManager, title = "BRUCE")
 
         // ── Подзаголовок ──
+        val context = androidx.compose.ui.platform.LocalContext.current
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -70,7 +74,7 @@ fun MainMenuScreen(
             )
             Spacer(Modifier.width(8.dp))
             Text(
-                "MAIN MENU",
+                context.getString(com.bruce.controller.R.string.main_menu),
                 color = BruceColors.Primary,
                 fontFamily = FontFamily.Monospace,
                 fontSize = 11.sp,
@@ -97,6 +101,7 @@ fun MainMenuScreen(
         ) {
             items(features) { feature ->
                 CategoryTile(feature = feature) {
+                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                     onCategoryClick(feature.category)
                 }
             }
@@ -110,7 +115,7 @@ fun MainMenuScreen(
                 .padding(vertical = 6.dp, horizontal = 12.dp)
         ) {
             Text(
-                "tap a tile → opens live menu on stick",
+                context.getString(com.bruce.controller.R.string.tap_a_tile),
                 color = BruceColors.TextDim,
                 fontFamily = FontFamily.Monospace,
                 fontSize = 9.sp

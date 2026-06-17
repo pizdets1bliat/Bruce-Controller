@@ -1,4 +1,20 @@
-<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Bruce Controller</string>
+    <string name="scan_for_devices">Scan for Devices</string>
+    <string name="stop_scan">Stop Scan</string>
+    <string name="scanning">Scanning...</string>
+    <string name="not_connected">Not connected</string>
+    <string name="connecting">Connecting...</string>
+    <string name="connected">Connected</string>
+    <string name="no_devices_found">No Bruce devices found.\nMake sure your M5Stick S3 is powered on\nwith Bruce firmware and BLE is enabled.</string>
+    <string name="please_enable_bluetooth">Please enable Bluetooth first</string>
+    <string name="ble_permissions_required">BLE permissions required</string>
+    <string name="main_menu">MAIN MENU</string>
+    <string name="tap_a_tile">tap a tile → opens live menu on stick</string>
+    <string name="terminal_ready">// Terminal ready. Type a command below or use the D-pad.</string>
+    <string name="loading_menu">Loading menu…</string>
+    <string name="loader_open">loader open → optionsJSON</string>
+    <string name="no_options_in_menu">No options in this menu.\nTry refreshing or exiting.</string>
+    <string name="stick_did_not_respond">The stick did not respond.\nCheck if BLE API is enabled:\nConfig → Toggle BLE API</string>
+    <string name="retry">RETRY</string>
 </resources>

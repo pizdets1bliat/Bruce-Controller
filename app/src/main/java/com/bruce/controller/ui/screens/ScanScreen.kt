@@ -50,24 +50,30 @@ fun ScanScreen(
                 isScanning = true
                 bleManager.startScan()
             } else {
-                Toast.makeText(context, "Please enable Bluetooth first", Toast.LENGTH_LONG).show()
+                Toast.makeText(context, context.getString(com.bruce.controller.R.string.please_enable_bluetooth), Toast.LENGTH_LONG).show()
             }
         } else {
-            Toast.makeText(context, "BLE permissions required", Toast.LENGTH_LONG).show()
+            Toast.makeText(context, context.getString(com.bruce.controller.R.string.ble_permissions_required), Toast.LENGTH_LONG).show()
         }
     }
 
     fun checkAndStartScan() {
         if (!bleManager.isBluetoothEnabled()) {
-            Toast.makeText(context, "Please enable Bluetooth first", Toast.LENGTH_LONG).show()
+            Toast.makeText(context, context.getString(com.bruce.controller.R.string.please_enable_bluetooth), Toast.LENGTH_LONG).show()
             return
         }
 
-        val permissions = arrayOf(
-            Manifest.permission.BLUETOOTH_SCAN,
-            Manifest.permission.BLUETOOTH_CONNECT,
-            Manifest.permission.ACCESS_FINE_LOCATION
-        )
+        val permissions = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
+            arrayOf(
+                Manifest.permission.BLUETOOTH_SCAN,
+                Manifest.permission.BLUETOOTH_CONNECT
+            )
+        } else {
+            arrayOf(
+                Manifest.permission.ACCESS_FINE_LOCATION
+            )
+        }
+
         val allGranted = permissions.all {
             ContextCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED
         }
@@ -126,15 +132,15 @@ fun ScanScreen(
         when (val state = connectionState) {
             is ConnectionState.Disconnected -> {
                 ConnectionStatusCard(
-                    status = if (isScanning) "Scanning..." else "Not connected",
+                    status = if (isScanning) context.getString(com.bruce.controller.R.string.scanning) else context.getString(com.bruce.controller.R.string.not_connected),
                     color = if (isScanning) BruceColors.Warning else BruceColors.UnavailableText
                 )
             }
             is ConnectionState.Connecting -> {
-                ConnectionStatusCard(status = "Connecting...", color = BruceColors.Warning)
+                ConnectionStatusCard(status = context.getString(com.bruce.controller.R.string.connecting), color = BruceColors.Warning)
             }
             is ConnectionState.Connected -> {
-                ConnectionStatusCard(status = "Connected", color = BruceColors.Success)
+                ConnectionStatusCard(status = context.getString(com.bruce.controller.R.string.connected), color = BruceColors.Success)
             }
             is ConnectionState.Error -> {
                 ConnectionStatusCard(status = state.message, color = BruceColors.Error)
@@ -168,7 +174,7 @@ fun ScanScreen(
             )
             Spacer(modifier = Modifier.width(8.dp))
             Text(
-                text = if (isScanning) "Stop Scan" else "Scan for Devices",
+                text = if (isScanning) context.getString(com.bruce.controller.R.string.stop_scan) else context.getString(com.bruce.controller.R.string.scan_for_devices),
                 fontWeight = FontWeight.SemiBold,
                 fontFamily = FontFamily.Monospace
             )
@@ -195,7 +201,7 @@ fun ScanScreen(
             if (scanResults.isEmpty() && !isScanning) {
                 item {
                     Text(
-                        text = "No Bruce devices found.\nMake sure your M5Stick S3 is powered on\nwith Bruce firmware and BLE is enabled.",
+                        text = context.getString(com.bruce.controller.R.string.no_devices_found),
                         color = BruceColors.UnavailableText,
                         textAlign = TextAlign.Center,
                         modifier = Modifier

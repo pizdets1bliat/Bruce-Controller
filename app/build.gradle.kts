@@ -70,5 +70,11 @@ dependencies {
 
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.9.0")
 
+    // Koin for Dependency Injection
+    implementation("io.insert-koin:koin-androidx-compose:3.5.3")
+
+    // Preferences DataStore for Terminal History
+    implementation("androidx.datastore:datastore-preferences:1.0.0")
+
     debugImplementation("androidx.compose.ui:ui-tooling")
 }

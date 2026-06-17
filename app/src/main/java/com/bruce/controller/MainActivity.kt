@@ -4,36 +4,30 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.runtime.LaunchedEffect
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.bruce.controller.ble.BruceBleManager
-import com.bruce.controller.cli.BruceCliHandler
 import com.bruce.controller.data.model.BruceCategory
+import com.bruce.controller.ui.MainViewModel
 import com.bruce.controller.ui.screens.FeatureListScreen
 import com.bruce.controller.ui.screens.MainMenuScreen
 import com.bruce.controller.ui.screens.ScanScreen
 import com.bruce.controller.ui.screens.TerminalScreen
 import com.bruce.controller.ui.theme.BruceTheme
+import org.koin.androidx.compose.koinViewModel
 
 class MainActivity : ComponentActivity() {
-
-    private lateinit var bleManager: BruceBleManager
-    private lateinit var cliHandler: BruceCliHandler
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
-        bleManager = BruceBleManager(applicationContext)
-        cliHandler = BruceCliHandler(bleManager)
-
         setContent {
-            BruceTheme {
-                // Запускаем сбор ответов из BLE при первой композиции
-                LaunchedEffect(Unit) { cliHandler.startCollecting() }
+            val mainViewModel: MainViewModel = koinViewModel()
+            val bleManager = mainViewModel.bleManager
+            val cliHandler = mainViewModel.cliHandler
 
+            BruceTheme {
                 val navController = rememberNavController()
                 NavHost(navController = navController, startDestination = "scan") {
                     composable("scan") {
@@ -81,11 +75,5 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        cliHandler.stopCollecting()
-        bleManager.disconnect()
     }
 }

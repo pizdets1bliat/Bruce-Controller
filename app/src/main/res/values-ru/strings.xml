@@ -1,0 +1,20 @@
+<resources>
+    <string name="app_name">Bruce Controller</string>
+    <string name="scan_for_devices">Поиск устройств</string>
+    <string name="stop_scan">Остановить поиск</string>
+    <string name="scanning">Поиск...</string>
+    <string name="not_connected">Не подключено</string>
+    <string name="connecting">Подключение...</string>
+    <string name="connected">Подключено</string>
+    <string name="no_devices_found">Устройства Bruce не найдены.\nУбедитесь, что ваш M5Stick S3 включен,\nна нем установлена прошивка Bruce и включен BLE.</string>
+    <string name="please_enable_bluetooth">Пожалуйста, сначала включите Bluetooth</string>
+    <string name="ble_permissions_required">Требуются разрешения BLE</string>
+    <string name="main_menu">ГЛАВНОЕ МЕНЮ</string>
+    <string name="tap_a_tile">нажмите на плитку → откроет меню на стике</string>
+    <string name="terminal_ready">// Терминал готов. Введите команду ниже.</string>
+    <string name="loading_menu">Загрузка меню…</string>
+    <string name="loader_open">loader open → optionsJSON</string>
+    <string name="no_options_in_menu">В этом меню нет опций.\nПопробуйте обновить или выйти.</string>
+    <string name="stick_did_not_respond">Стик не ответил.\nПроверьте, что BLE API включен:\nConfig → Toggle BLE API</string>
+    <string name="retry">ПОВТОРИТЬ</string>
+</resources>

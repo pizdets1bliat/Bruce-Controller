@@ -152,9 +152,15 @@ class BruceBleManager(private val context: Context) {
     // ──────────────────────────────────────────────────────────────
     // Подключение
     // ──────────────────────────────────────────────────────────────
+
+    private var lastConnectedDevice: BluetoothDevice? = null
+    private var shouldAutoReconnect = false
+
     @SuppressLint("MissingPermission")
     fun connect(device: BluetoothDevice) {
         stopScan()
+        lastConnectedDevice = device
+        shouldAutoReconnect = true
         _connectionState.value = ConnectionState.Connecting
         // autoConnect=false, transport=LE
         bluetoothGatt = device.connectGatt(context, false, gattCallback, BluetoothDevice.TRANSPORT_LE)
@@ -162,6 +168,7 @@ class BruceBleManager(private val context: Context) {
 
     @SuppressLint("MissingPermission")
     fun disconnect() {
+        shouldAutoReconnect = false
         bluetoothGatt?.disconnect()
         bluetoothGatt?.close()
         bluetoothGatt = null
@@ -169,6 +176,20 @@ class BruceBleManager(private val context: Context) {
         batteryCharacteristic = null
         maxWriteChunk = 20
         _connectionState.value = ConnectionState.Disconnected
+    }
+
+    private fun attemptReconnect() {
+        if (!shouldAutoReconnect) return
+        val device = lastConnectedDevice ?: return
+
+        scope.launch {
+            _connectionState.value = ConnectionState.Connecting
+            kotlinx.coroutines.delay(2000) // Задержка перед попыткой переподключения
+            if (shouldAutoReconnect) {
+                // Если все еще нужно подключаться, пытаемся снова
+                connect(device)
+            }
+        }
     }
 
     fun isConnected(): Boolean = _connectionState.value is ConnectionState.Connected
@@ -236,6 +257,7 @@ class BruceBleManager(private val context: Context) {
                         gatt.requestMtu(REQUESTED_MTU)
                     } else {
                         _connectionState.value = ConnectionState.Error("Connect failed: status=$status")
+                        attemptReconnect()
                     }
                 }
                 BluetoothProfile.STATE_DISCONNECTED -> {
@@ -244,6 +266,10 @@ class BruceBleManager(private val context: Context) {
                     batteryCharacteristic = null
                     gatt.close()
                     bluetoothGatt = null
+
+                    if (shouldAutoReconnect) {
+                        attemptReconnect()
+                    }
                 }
             }
         }

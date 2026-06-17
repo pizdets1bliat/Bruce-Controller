@@ -55,6 +55,7 @@ class BruceBleManager(private val context: Context) {
         val BRUCE_DEVICE_NAMES = setOf("Bruc", "Bruce", "M5Stick")
 
         private const val REQUESTED_MTU = 247
+        private const val CHUNK_DELAY_MS = 25L
     }
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
@@ -193,7 +194,7 @@ class BruceBleManager(private val context: Context) {
             offset = end
             // Небольшая задержка между чанками: write с подтверждением, но Android
             // не всегда дожидается ответа перед следующей записью.
-            kotlinx.coroutines.delay(25)
+            kotlinx.coroutines.delay(CHUNK_DELAY_MS)
         }
     }
 

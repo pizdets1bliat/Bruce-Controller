@@ -59,12 +59,12 @@ class BruceCliHandler(private val bleManager: BruceBleManager) {
             rawBuffer.clear()
             rawBuffer.append(tail)
         }
-        chunk.split('\n').forEach { line ->
+        val newLines = chunk.split('\n').mapNotNull { line ->
             val trimmed = line.trimEnd('\r')
-            if (trimmed.isNotEmpty()) {
-                _terminalLog.value = (_terminalLog.value + TerminalLine(trimmed, TerminalLineType.OUTPUT))
-                    .takeLast(500)
-            }
+            if (trimmed.isNotEmpty()) TerminalLine(trimmed, TerminalLineType.OUTPUT) else null
+        }
+        if (newLines.isNotEmpty()) {
+            _terminalLog.value = (_terminalLog.value + newLines).takeLast(500)
         }
     }
 

@@ -17,6 +17,10 @@ import org.json.JSONObject
  */
 class BruceCliHandler(private val bleManager: BruceBleManager) {
 
+    companion object {
+        const val MAX_TERMINAL_LINES = 500
+    }
+
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private var responseCollector: Job? = null
 
@@ -64,7 +68,7 @@ class BruceCliHandler(private val bleManager: BruceBleManager) {
             if (trimmed.isNotEmpty()) TerminalLine(trimmed, TerminalLineType.OUTPUT) else null
         }
         if (newLines.isNotEmpty()) {
-            _terminalLog.value = (_terminalLog.value + newLines).takeLast(500)
+            _terminalLog.value = (_terminalLog.value + newLines).takeLast(MAX_TERMINAL_LINES)
         }
     }
 
@@ -134,11 +138,11 @@ class BruceCliHandler(private val bleManager: BruceBleManager) {
     suspend fun execute(command: String): Boolean {
         val cmd = command.trim()
         if (cmd.isEmpty()) return false
-        _terminalLog.value = (_terminalLog.value + TerminalLine("> $cmd", TerminalLineType.INPUT)).takeLast(500)
+        _terminalLog.value = (_terminalLog.value + TerminalLine("> $cmd", TerminalLineType.INPUT)).takeLast(MAX_TERMINAL_LINES)
         val ok = bleManager.sendCommand(cmd)
         if (!ok) {
             _terminalLog.value = (_terminalLog.value +
-                TerminalLine("[!] BLE send failed (not connected?)", TerminalLineType.ERROR)).takeLast(500)
+                TerminalLine("[!] BLE send failed (not connected?)", TerminalLineType.ERROR)).takeLast(MAX_TERMINAL_LINES)
         }
         return ok
     }

@@ -46,14 +46,23 @@ fun ScanScreen(
     ) { permissions ->
         val allGranted = permissions.values.all { it }
         if (allGranted) {
-            isScanning = true
-            bleManager.startScan()
+            if (bleManager.isBluetoothEnabled()) {
+                isScanning = true
+                bleManager.startScan()
+            } else {
+                Toast.makeText(context, "Please enable Bluetooth first", Toast.LENGTH_LONG).show()
+            }
         } else {
             Toast.makeText(context, "BLE permissions required", Toast.LENGTH_LONG).show()
         }
     }
 
     fun checkAndStartScan() {
+        if (!bleManager.isBluetoothEnabled()) {
+            Toast.makeText(context, "Please enable Bluetooth first", Toast.LENGTH_LONG).show()
+            return
+        }
+
         val permissions = arrayOf(
             Manifest.permission.BLUETOOTH_SCAN,
             Manifest.permission.BLUETOOTH_CONNECT,

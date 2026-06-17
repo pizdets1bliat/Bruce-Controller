@@ -52,10 +52,10 @@ class BruceCliHandler(private val bleManager: BruceBleManager) {
     }
 
     private fun appendOutput(chunk: String) {
-        _lastResponse.value = (_lastResponse.value + chunk).takeLast(8000)
+        _lastResponse.value = (_lastResponse.value + chunk).takeLast(MAX_LAST_RESPONSE_LENGTH)
         rawBuffer.append(chunk)
-        if (rawBuffer.length > 32_000) {
-            val tail = rawBuffer.takeLast(16_000).toString()
+        if (rawBuffer.length > MAX_RAW_BUFFER_SIZE) {
+            val tail = rawBuffer.takeLast(RAW_BUFFER_TRIM_SIZE).toString()
             rawBuffer.clear()
             rawBuffer.append(tail)
         }
@@ -185,6 +185,12 @@ class BruceCliHandler(private val bleManager: BruceBleManager) {
     suspend fun date() = execute("date")
     suspend fun beep(freq: Int = 1000, durationMs: Int = 200) = execute("tone $freq $durationMs")
     suspend fun setBrightness(value: Int) = execute("screen brightness $value")
+
+    companion object {
+        private const val MAX_LAST_RESPONSE_LENGTH = 8000
+        private const val MAX_RAW_BUFFER_SIZE = 32_000
+        private const val RAW_BUFFER_TRIM_SIZE = 16_000
+    }
 }
 
 enum class NavDirection(val code: String) {

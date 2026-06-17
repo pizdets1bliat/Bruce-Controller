@@ -59,9 +59,10 @@ class BruceBleManager(private val context: Context) {
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
-    private val bluetoothAdapter: BluetoothAdapter? =
-        (context.getSystemService(Context.BLUETOOTH_SERVICE) as? BluetoothManager)?.adapter
-    private var bluetoothLeScanner: BluetoothLeScanner? = bluetoothAdapter?.bluetoothLeScanner
+    private val bluetoothAdapter: BluetoothAdapter?
+        get() = (context.getSystemService(Context.BLUETOOTH_SERVICE) as? BluetoothManager)?.adapter
+    private val bluetoothLeScanner: BluetoothLeScanner?
+        get() = bluetoothAdapter?.bluetoothLeScanner
 
     private var bluetoothGatt: BluetoothGatt? = null
     private var serialCharacteristic: BluetoothGattCharacteristic? = null
@@ -87,6 +88,9 @@ class BruceBleManager(private val context: Context) {
     // Очередь команд для последовательной отправки
     private val pendingCommands = Channel<String>(Channel.UNLIMITED)
 
+    // Канал для ожидания завершения записи куска данных в характеристику
+    private val writeAckChannel = Channel<Unit>(Channel.CONFLATED)
+
     init {
         // Стартуем consumer-корутину сразу — она ждёт команды и пишет их по одной
         scope.launch {
@@ -99,8 +103,18 @@ class BruceBleManager(private val context: Context) {
     // ──────────────────────────────────────────────────────────────
     // Сканирование
     // ──────────────────────────────────────────────────────────────
+
+    fun isBluetoothEnabled(): Boolean {
+        return bluetoothAdapter?.isEnabled == true
+    }
+
     @SuppressLint("MissingPermission")
     fun startScan() {
+        if (!isBluetoothEnabled()) {
+            _connectionState.value = ConnectionState.Error("Bluetooth is disabled")
+            return
+        }
+
         _scanResults.value = emptyList()
         val filters = listOf(
             ScanFilter.Builder().setServiceUuid(ParcelUuid(SERIAL_SERVICE_UUID)).build()
@@ -188,12 +202,23 @@ class BruceBleManager(private val context: Context) {
             char.writeType = BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT
             @Suppress("DEPRECATION")
             char.value = chunk
+
+            // Очищаем канал перед записью, чтобы не было старых ack
+            while (writeAckChannel.tryReceive().isSuccess) { /* consume */ }
+
             @Suppress("DEPRECATION")
-            gatt.writeCharacteristic(char)
+            val success = gatt.writeCharacteristic(char)
+            if (success) {
+                // Ждём реального onCharacteristicWrite из коллбека (или таймаут)
+                kotlinx.coroutines.withTimeoutOrNull(2000) {
+                    writeAckChannel.receive()
+                }
+            } else {
+                // Если writeCharacteristic вернул false, попробуем подождать и повторить
+                kotlinx.coroutines.delay(50)
+                continue
+            }
             offset = end
-            // Небольшая задержка между чанками: write с подтверждением, но Android
-            // не всегда дожидается ответа перед следующей записью.
-            kotlinx.coroutines.delay(25)
         }
     }
 
@@ -294,6 +319,18 @@ class BruceBleManager(private val context: Context) {
                         gatt.writeDescriptor(d)
                     }
                 }
+            }
+        }
+
+        @Suppress("DEPRECATION")
+        override fun onCharacteristicWrite(
+            gatt: BluetoothGatt,
+            characteristic: BluetoothGattCharacteristic,
+            status: Int
+        ) {
+            if (characteristic.uuid == SERIAL_CHAR_UUID) {
+                // Сигнализируем, что можно писать следующий кусок
+                writeAckChannel.trySend(Unit)
             }
         }
 

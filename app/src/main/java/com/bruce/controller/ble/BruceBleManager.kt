@@ -71,6 +71,7 @@ class BruceBleManager(private val context: Context) {
     // MTU - 3 байта на ATT header.
     private var maxWriteChunk: Int = 20 // default until MTU exchange
 
+    private val scanResultsMap = java.util.concurrent.ConcurrentHashMap<String, ScanResult>()
     private val _scanResults = MutableStateFlow<List<ScanResult>>(emptyList())
     val scanResults: StateFlow<List<ScanResult>> = _scanResults.asStateFlow()
 
@@ -101,6 +102,7 @@ class BruceBleManager(private val context: Context) {
     // ──────────────────────────────────────────────────────────────
     @SuppressLint("MissingPermission")
     fun startScan() {
+        scanResultsMap.clear()
         _scanResults.value = emptyList()
         val filters = listOf(
             ScanFilter.Builder().setServiceUuid(ParcelUuid(SERIAL_SERVICE_UUID)).build()
@@ -128,10 +130,8 @@ class BruceBleManager(private val context: Context) {
             val matchesName = name != null && BRUCE_DEVICE_NAMES.any { name.startsWith(it, ignoreCase = true) }
             if (!matchesService && !matchesName) return
 
-            val current = _scanResults.value.toMutableList()
-            val idx = current.indexOfFirst { it.device?.address == device.address }
-            if (idx >= 0) current[idx] = result else current += result
-            _scanResults.value = current
+            scanResultsMap[device.address] = result
+            _scanResults.value = scanResultsMap.values.toList()
         }
     }
 
